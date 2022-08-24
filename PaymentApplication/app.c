@@ -16,6 +16,7 @@ typedef enum
 	STATE_CARD_HOLDER_NAME,
 	STATE_CARD_EXPIRATION_DATE,
 	STATE_CARD_PAN,
+	STATE_VALID_CARD_PAN,
 	STATE_TRANSACTION_DATE,
 	STATE_CHECK_EXPIRATION_DATE,
 	STATE_RECEIVE_TRANSACTION_DATA,
@@ -56,6 +57,13 @@ void appStart(void)
 		if (getCardPAN(&transaction.cardHolderData) == WRONG_PAN)
 		{
 			printf("\t\tMSG:: WRONG_PAN\n");
+			break;
+		}
+
+	case STATE_VALID_CARD_PAN:
+		if (isValidCardPAN(&transaction.cardHolderData) == INVALID_CARD)
+		{
+			printf("\t\tMSG:: INVALID_CARD\n");
 			break;
 		}
 

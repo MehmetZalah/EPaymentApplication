@@ -85,3 +85,25 @@ EN_terminalError_t setMaxAmount(ST_terminalData_t* termData)
 
 	return OK;
 }
+
+EN_terminalError_t isValidCardPAN(ST_cardData_t* cardData)
+{
+	/* Luhn Check */
+	char accountNumberLength = strlen(cardData->primaryAccountNumber);
+
+	int sum = 0, i = accountNumberLength - 1, y = 1;
+
+	for (; i >= 0; i--)
+	{
+		/* multiply first digit by 1, second by 2, third by 1 ...*/
+		sum += ((int)((cardData->primaryAccountNumber[i] - '0') * y) / 10) + (((cardData->primaryAccountNumber[i] - '0') * y) % 10);
+		y = (y == 2) ? 1 : 2;
+	}
+
+	if (sum % 10 != 0)
+	{
+		return INVALID_CARD;
+	}
+
+	return OK;
+}

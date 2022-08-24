@@ -9,8 +9,11 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <ctype.h>
+
 
 #define IS_NOT_ALPHANUMIRIC 0
+#define IS_NOT_ALPHAPET 0
 
 #define ACCOUNT_NUMBER_MIN 16
 #define ACCOUNT_NUMBER_MAX 19
@@ -28,7 +31,7 @@ EN_cardError_t getCardHolderName(ST_cardData_t* cardData)
 	getchar();
 
 	char cardHolderNameLength = strlen(cardData->cardHolderName);
-	
+
 	/* Check characters string */
 	int i = 0;
 	for(;i<cardHolderNameLength;i++)
@@ -103,22 +106,6 @@ EN_cardError_t getCardPAN(ST_cardData_t* cardData)
 		element++;
 
 	} while (element < accountNumberLength);
-
-	/* Luhn Check */
-	int sum = 0, i = accountNumberLength - 1, y = 1;
-
-	for (; i >= 0; i--)
-	{
-		/* multiply first digit by 1, second by 2, third by 1 ...*/
-		sum += ((int)((cardData->primaryAccountNumber[i] - '0') * y) / 10) + (((cardData->primaryAccountNumber[i] - '0') * y) % 10);
-		y = (y == 2)? 1 : 2;
-	}
-
-	if (sum % 10 != 0)
-	{
-		printf("\t\tINFO:: INVALID_CARD\n");
-		return WRONG_PAN;
-	}
 
 	return DATA_OK;
 }
