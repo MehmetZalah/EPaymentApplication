@@ -27,7 +27,7 @@ EN_terminalError_t getTransactionDate(ST_terminalData_t* termData)
 	if (strlen(termData->transactionDate) != 10)
 		return WRONG_DATE;
 
-	return OK;
+	return TERMINAL_OK;
 }
 
 EN_terminalError_t isCardExpired(ST_cardData_t cardData, ST_terminalData_t termData)
@@ -42,11 +42,11 @@ EN_terminalError_t isCardExpired(ST_cardData_t cardData, ST_terminalData_t termD
 
 	/* compares the card expiry date with the transaction date */
 	if (cardExpiryYear > currentYear)
-		return OK;
+		return TERMINAL_OK;
 	
 	if(cardExpiryYear == currentYear)
 		if(cardExpiryMonth >= currentMonth)
-			return OK;
+			return TERMINAL_OK;
 
 	return EXPIRED_CARD;
 }
@@ -62,7 +62,7 @@ EN_terminalError_t getTransactionAmount(ST_terminalData_t* termData)
 	if (termData->transAmount <= 0)
 		return INVALID_AMOUNT;
 
-	return OK;
+	return TERMINAL_OK;
 }
 
 EN_terminalError_t isBelowMaxAmount(ST_terminalData_t* termData)
@@ -71,7 +71,7 @@ EN_terminalError_t isBelowMaxAmount(ST_terminalData_t* termData)
 	if (termData->transAmount > termData->maxTransAmount)
 		return EXCEED_MAX_AMOUNT;
 
-	return OK;
+	return TERMINAL_OK;
 }
 
 EN_terminalError_t setMaxAmount(ST_terminalData_t* termData)
@@ -83,7 +83,7 @@ EN_terminalError_t setMaxAmount(ST_terminalData_t* termData)
 	if (termData->maxTransAmount <= 0)
 		return INVALID_MAX_AMOUNT;
 
-	return OK;
+	return TERMINAL_OK;
 }
 
 EN_terminalError_t isValidCardPAN(ST_cardData_t* cardData)
@@ -105,5 +105,5 @@ EN_terminalError_t isValidCardPAN(ST_cardData_t* cardData)
 		return INVALID_CARD;
 	}
 
-	return OK;
+	return TERMINAL_OK;
 }

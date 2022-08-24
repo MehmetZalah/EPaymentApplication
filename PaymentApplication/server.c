@@ -11,7 +11,6 @@
 
 ST_accountsDB_t accountsDBFile;
 ST_transaction transactionDB[255];
-int accountID = 0;
 
 #define IS_FOUND 0
 
@@ -21,6 +20,7 @@ typedef enum
 	STATE_CHECK_EXCEDDED_AMOUNT,
 	STATE_VALID_ACCOUNT,
 	STATE_AMOUNT_AVAILABLE,
+	STATE_CHECK_ACCOUNT_BLOCKED,
 	STATE_SAVE_TRANSACTION,
 }tSTATE_y;
 
@@ -45,14 +45,21 @@ EN_transStat_t recieveTransactionData(ST_transaction* transData)
 		}
 
 	case STATE_VALID_ACCOUNT:
-		if (isValidAccount(&transData->cardHolderData) == ACCOUNT_NOT_FOUND)
+		if (isValidAccount(transData->cardHolderData, &accountsDBFile) == ACCOUNT_NOT_FOUND)
 		{
-			printf("\t\tMSG:: DECLINED_STOLEN_CARD\n");
-			return DECLINED_STOLEN_CARD;
+			printf("\t\tMSG:: FRAUD_CARD\n");
+			return FRAUD_CARD;
 		}
 
 	case STATE_AMOUNT_AVAILABLE:
 		if (isAmountAvailable(&transData->terminalData) == LOW_BALANCE)
+		{
+			printf("\t\tMSG:: DECLINED_INSUFFECIENT_FUND\n");
+			return DECLINED_INSUFFECIENT_FUND;
+		}
+
+	case STATE_CHECK_ACCOUNT_BLOCKED:
+		if (isBlockedAccount(&accountsDBFile) == BLOCKED_ACCOUNT)
 		{
 			printf("\t\tMSG:: DECLINED_INSUFFECIENT_FUND\n");
 			return DECLINED_INSUFFECIENT_FUND;
@@ -71,13 +78,14 @@ EN_transStat_t recieveTransactionData(ST_transaction* transData)
 
 }
 
-EN_serverError_t isValidAccount(ST_cardData_t* cardData)
+EN_serverError_t isValidAccount(ST_cardData_t cardData, ST_accountsDB_t* accountRefrence)
 {
 	char temp[15];
 	memset(temp,0,15);
 
 	FILE* databaseFile;
-	char line[40];
+	char line[50];
+	char accountState[8];
 
 	databaseFile = fopen("AccountsDB.txt", "r");
 
@@ -91,25 +99,44 @@ EN_serverError_t isValidAccount(ST_cardData_t* cardData)
 	{
 		int i = 0;
 		int y = 0;
-		for (; i < 30; i++)
+		for (; i < 50; i++)
 		{
 			/* Character Separator & END OF primaryAccountNumber */
 			if (line[i] == ',')
 			{
 				/* checks if the PAN exists or not in the server's database */
-				if (strcmp(cardData->primaryAccountNumber, accountsDBFile.primaryAccountNumber) == IS_FOUND)
+				if (strcmp(cardData.primaryAccountNumber, accountRefrence->primaryAccountNumber) == IS_FOUND)
 				{
 					
 					i++;
 
 					/* get the balance for this primaryAccountNumber */
-					for (;i<30; i++)
+					for (;i<50; i++)
 					{
-						if (line[i] == ';')
+						if (line[i] == ',')
 						{
-							accountsDBFile.balance = atof(temp);
+							accountRefrence->balance = atof(temp);
+
+							i++;
+
+							/* get account state */
+							for (;i<50;i++)
+							{
+								if (line[i] == ';')
+								{
+									if (strcmp(accountState, "RUNNING") == IS_FOUND)
+										accountRefrence->state = RUNNING;
+									else
+										accountRefrence->state = BLOCKED;
+								}
+								else
+								{
+									accountState[i] = line[i];
+								}
+							}
+
 							fclose(databaseFile);
-							return OK;
+							return TERMINAL_OK;
 						}
 						else
 						{
@@ -118,13 +145,13 @@ EN_serverError_t isValidAccount(ST_cardData_t* cardData)
 						}
 					}
 				}
-				memset(accountsDBFile.primaryAccountNumber, 0, sizeof(accountsDBFile.primaryAccountNumber));
-				accountsDBFile.balance = 0;
+				memset(accountRefrence->primaryAccountNumber, 0, sizeof(accountRefrence->primaryAccountNumber));
+				accountRefrence->balance = 0;
 				break;
 			}
 			else
 			{
-				accountsDBFile.primaryAccountNumber[i] = line[i];
+				accountRefrence->primaryAccountNumber[i] = line[i];
 			}
 		}
 	}
@@ -154,21 +181,21 @@ EN_serverError_t isAmountAvailable(ST_terminalData_t* termData)
 	if (termData->transAmount > accountsDBFile.balance)
 		return LOW_BALANCE;
 	else
-		return OK;
+		return TERMINAL_OK;
 }
 
 EN_serverError_t saveTransaction(ST_transaction* transData)
 {
 	accountsDBFile.balance -= transData->terminalData.transAmount;
 	
-	char temp[40];
-	memset(temp, 0, 40);
+	char temp[50];
+	memset(temp, 0, 50);
 
 	char temp_filename[255];
 
 	FILE* updatedDatabaseFile;
 	FILE* databaseFile;
-	char line[40];
+	char line[50];
 
 	strcpy(temp_filename, "tempAccountsDB.txt");
 
@@ -180,11 +207,11 @@ EN_serverError_t saveTransaction(ST_transaction* transData)
 
 	int recordNum = 0;
 
-	while (fgets(line, 40, databaseFile))
+	while (fgets(line, 50, databaseFile))
 	{
 		int i = 0;
 		int y = 0;
-		for (; i < 30; i++)
+		for (; i < 50; i++)
 		{
 			/* Character Separator & END OF primaryAccountNumber */
 			if (line[i] == ',')
@@ -193,7 +220,7 @@ EN_serverError_t saveTransaction(ST_transaction* transData)
 				if (strcmp(transData->cardHolderData.primaryAccountNumber, accountsDBFile.primaryAccountNumber) == IS_FOUND)
 				{
 					/* store updated record*/
-					sprintf(temp, "%s,%f;\n", transData->cardHolderData.primaryAccountNumber, accountsDBFile.balance);
+					sprintf(temp, "%s,%f,RUNNING;\n", transData->cardHolderData.primaryAccountNumber, accountsDBFile.balance);
 					fputs(temp, updatedDatabaseFile);
 				}
 				else
@@ -229,18 +256,30 @@ EN_serverError_t saveTransaction(ST_transaction* transData)
 	transactionDB[transData->transactionSequenceNumber].transactionSequenceNumber = transData->transactionSequenceNumber;
 	transactionDB[transData->transactionSequenceNumber].transState = APPROVED;
 
+	if (getTransaction(transData->transactionSequenceNumber, &transactionDB) == TRANSACTION_NOT_FOUND)
+		return SAVING_FAILED;
+
 	/* gives a sequence number to a transaction */
 	transData->transactionSequenceNumber++;
 
-	return SERVER_DATA_OK;
+
+	return SERVER_OK;
 }
 
 EN_serverError_t getTransaction(uint32_t transactionSequenceNumber, ST_transaction* transData)
 {
 	int i = 0;
 	for (; i < sizeof(transactionDB) / sizeof(transactionDB[0]); i++)
-		if (strcmp(transactionSequenceNumber, transactionDB[i].transactionSequenceNumber) == IS_FOUND)
-			return OK;
+		if (transactionSequenceNumber == transactionDB[i].transactionSequenceNumber)
+			return TERMINAL_OK;
 
 	return TRANSACTION_NOT_FOUND;
+}
+
+EN_serverError_t isBlockedAccount(ST_accountsDB_t* accountRefrence)
+{
+	if (accountRefrence->state == BLOCKED)
+		return BLOCKED_ACCOUNT;
+	else
+		return SERVER_OK;
 }

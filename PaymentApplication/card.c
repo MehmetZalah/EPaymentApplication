@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 
-#define IS_NOT_ALPHANUMIRIC 0
+#define IS_NOT_NUMERIC 0
 #define IS_NOT_ALPHAPET 0
 
 #define ACCOUNT_NUMBER_MIN 16
@@ -25,8 +25,6 @@
 
 EN_cardError_t getCardHolderName(ST_cardData_t* cardData)
 {
-	memset(cardData->cardHolderName, 0, 25);
-
 	/* Ask for the cardholder's name */
 	printf("Card Holder Name: ");
 	scanf("%[^\n]s",cardData->cardHolderName);
@@ -44,13 +42,11 @@ EN_cardError_t getCardHolderName(ST_cardData_t* cardData)
 	if (cardHolderNameLength < CARD_HOLDER_NAME_MIN || cardHolderNameLength > CARD_HOLDER_NAME_MAX)
 		return WRONG_NAME;
 
-	return DATA_OK;
+	return CARD_OK;
 }
 
 EN_cardError_t getCardExpiryDate(ST_cardData_t* cardData)
 {
-	memset(cardData->cardExpirationDate, 0, 6);
-
 	/* ask for the card expiry date */
 	printf("Card Expiry Date: ");
 	scanf("%[^\n]s", cardData->cardExpirationDate);
@@ -78,7 +74,7 @@ EN_cardError_t getCardExpiryDate(ST_cardData_t* cardData)
 		if(month < 1 || month > 12)
 			return WRONG_EXP_DATE;
 
-		return DATA_OK;
+		return CARD_OK;
 	}
 
 	return WRONG_EXP_DATE;
@@ -87,9 +83,6 @@ EN_cardError_t getCardExpiryDate(ST_cardData_t* cardData)
 
 EN_cardError_t getCardPAN(ST_cardData_t* cardData)
 {
-
-	memset(cardData->primaryAccountNumber,0,20);
-
 	/* ask for the card's Primary Account Number */
 	printf("Card Primary Account Number: ");
 	int value = scanf("%[^\n]s", cardData->primaryAccountNumber);
@@ -105,13 +98,13 @@ EN_cardError_t getCardPAN(ST_cardData_t* cardData)
 
 	do
 	{
-		/* alphanumeric only */
-		if(isalnum(cardData->primaryAccountNumber[element]) == IS_NOT_ALPHANUMIRIC)
+		/* numeric only */
+		if(isdigit(cardData->primaryAccountNumber[element]) == IS_NOT_NUMERIC)
 			return WRONG_PAN;
 
 		element++;
 
 	} while (element < accountNumberLength);
 
-	return DATA_OK;
+	return CARD_OK;
 }
