@@ -42,11 +42,11 @@ EN_terminalError_t isCardExpired(ST_cardData_t cardData, ST_terminalData_t termD
 
 	/* compares the card expiry date with the transaction date */
 	if (cardExpiryYear > currentYear)
-		return DATA_OK;
+		return OK;
 	
 	if(cardExpiryYear == currentYear)
 		if(cardExpiryMonth >= currentMonth)
-			return DATA_OK;
+			return OK;
 
 	return EXPIRED_CARD;
 }
