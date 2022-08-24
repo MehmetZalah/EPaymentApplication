@@ -118,7 +118,8 @@ EN_serverError_t isValidAccount(ST_cardData_t* cardData)
 						}
 					}
 				}
-				memset(accountsDBFile, 0, sizeof(accountsDBFile));
+				memset(accountsDBFile.primaryAccountNumber, 0, sizeof(accountsDBFile.primaryAccountNumber));
+				accountsDBFile.balance;
 				break;
 			}
 			else
