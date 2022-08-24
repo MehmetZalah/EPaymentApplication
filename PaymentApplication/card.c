@@ -25,6 +25,8 @@
 
 EN_cardError_t getCardHolderName(ST_cardData_t* cardData)
 {
+	memset(cardData->cardHolderName, 0, 25);
+
 	/* Ask for the cardholder's name */
 	printf("Card Holder Name: ");
 	scanf("%[^\n]s",cardData->cardHolderName);
@@ -47,6 +49,8 @@ EN_cardError_t getCardHolderName(ST_cardData_t* cardData)
 
 EN_cardError_t getCardExpiryDate(ST_cardData_t* cardData)
 {
+	memset(cardData->cardExpirationDate, 0, 6);
+
 	/* ask for the card expiry date */
 	printf("Card Expiry Date: ");
 	scanf("%[^\n]s", cardData->cardExpirationDate);
@@ -83,6 +87,8 @@ EN_cardError_t getCardExpiryDate(ST_cardData_t* cardData)
 
 EN_cardError_t getCardPAN(ST_cardData_t* cardData)
 {
+
+	memset(cardData->primaryAccountNumber,0,20);
 
 	/* ask for the card's Primary Account Number */
 	printf("Card Primary Account Number: ");
