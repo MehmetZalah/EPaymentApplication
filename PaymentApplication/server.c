@@ -61,8 +61,8 @@ EN_transStat_t recieveTransactionData(ST_transaction* transData)
 	case STATE_CHECK_ACCOUNT_BLOCKED:
 		if (isBlockedAccount(&accountsDBFile) == BLOCKED_ACCOUNT)
 		{
-			printf("\t\tMSG:: DECLINED_INSUFFECIENT_FUND\n");
-			return DECLINED_INSUFFECIENT_FUND;
+			printf("\t\tMSG:: DECLINED_STOLEN_CARD\n");
+			return DECLINED_STOLEN_CARD;
 		}
 
 	case STATE_SAVE_TRANSACTION:
