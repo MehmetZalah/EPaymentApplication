@@ -119,7 +119,7 @@ EN_serverError_t isValidAccount(ST_cardData_t* cardData)
 					}
 				}
 				memset(accountsDBFile.primaryAccountNumber, 0, sizeof(accountsDBFile.primaryAccountNumber));
-				accountsDBFile.balance;
+				accountsDBFile.balance = 0;
 				break;
 			}
 			else
