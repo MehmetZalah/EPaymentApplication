@@ -28,6 +28,12 @@ EN_cardError_t getCardHolderName(ST_cardData_t* cardData)
 	getchar();
 
 	char cardHolderNameLength = strlen(cardData->cardHolderName);
+	
+	/* Check characters string */
+	int i = 0;
+	for(;i<cardHolderNameLength;i++)
+		if (isalpha(cardData->cardHolderName[i]) == IS_NOT_ALPHAPET && cardData->cardHolderName[i] != ' ')
+			return WRONG_NAME;
 
 	/* Card holder name is 24 characters string max and 20 min */
 	if (cardHolderNameLength < CARD_HOLDER_NAME_MIN || cardHolderNameLength > CARD_HOLDER_NAME_MAX)
